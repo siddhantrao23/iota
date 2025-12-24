@@ -2,4 +2,8 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-CMD ["python", "-c", "print('Hello from inside the iota container!')"]
+COPY server.py .
+
+EXPOSE 8080
+
+CMD ["python", "server.py"]
