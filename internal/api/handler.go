@@ -2,10 +2,8 @@ package api
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/moby/moby/client"
 	"github.com/siddhantrao23/iota/internal/orchestrator"
 )
 
@@ -13,7 +11,7 @@ type ExecutionRequest struct {
 	Code string `json:"code" binding:"required"`
 }
 
-func SetupRouter(cli *client.Client) *gin.Engine {
+func SetupRouter() *gin.Engine {
 	router := gin.Default()
 
 	router.POST("/run", func(c *gin.Context) {
@@ -23,18 +21,28 @@ func SetupRouter(cli *client.Client) *gin.Engine {
 			return
 		}
 
-		start := time.Now()
-		output, err := orchestrator.ExecuteCode(cli, req.Code)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		resultChan := make(chan orchestrator.Result)
+		job := orchestrator.Job{
+			Code:       req.Code,
+			ResultChan: resultChan,
+		}
+
+		select {
+		case orchestrator.JobQueue <- job:
+		default:
+			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "system too busy"})
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"status": "success",
-			"output": output,
-			"time":   time.Since(start).Milliseconds(),
-		})
+		select {
+		case res := <-resultChan:
+			if res.Error != nil {
+				print(res.Error.Error())
+				c.JSON(http.StatusOK, gin.H{"error": res.Error.Error()})
+			} else {
+				c.JSON(http.StatusOK, gin.H{"output": res.Output})
+			}
+		}
 	})
 
 	return router

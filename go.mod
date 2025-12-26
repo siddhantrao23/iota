@@ -3,7 +3,6 @@ module github.com/siddhantrao23/iota
 go 1.24.3
 
 require (
-	github.com/docker/docker v28.5.2+incompatible
 	github.com/gin-gonic/gin v1.11.0
 	github.com/moby/moby/api v1.52.0
 	github.com/moby/moby/client v0.2.1

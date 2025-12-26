@@ -3,20 +3,14 @@ package orchestrator
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 )
 
-func sendCodeToWorker(workerURL string, code string) (string, error) {
-	if err := waitForWorker(workerURL); err != nil {
-		return "", fmt.Errorf("worker failed to become ready: %w", err)
-	}
-
+func sendCodeToWorker(workerUrl string, code string) (string, error) {
 	payload, _ := json.Marshal(map[string]string{"code": code})
-	resp, err := http.Post(workerURL, "application/json", bytes.NewBuffer(payload))
+	resp, err := http.Post(workerUrl, "application/json", bytes.NewBuffer(payload))
 	if err != nil {
 		return "", fmt.Errorf("worker unreachable: %w", err)
 	}
@@ -36,23 +30,4 @@ func sendCodeToWorker(workerURL string, code string) (string, error) {
 		return "", fmt.Errorf("python execution error: %s", workerResp.Error)
 	}
 	return workerResp.Output, nil
-}
-
-func waitForWorker(url string) error {
-	timeout := time.After(5 * time.Second)
-	ticker := time.NewTicker(100 * time.Millisecond)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-timeout:
-			return errors.New("timeout waiting for server to start")
-		case <-ticker.C:
-			resp, err := http.Get(url)
-			if err == nil {
-				resp.Body.Close()
-				return nil
-			}
-		}
-	}
 }
