@@ -18,13 +18,12 @@ curl -X POST http://localhost:8080/run \
 ```
 
 ## Features
-- Warm start: containers are pre-provisioned
+- Warm start: Containers are pre-provisioned
 - Concurrency: Handles multiple users via channels
 - Self-Healing: Recovers automatically if container crashes
-- Graceful Shutdown: Cleans up containers on exit
+- Cached Queries: Optimized retriggers of same code
 
 ## todos
-- add a cache that hashes input string to improve perf
 - add observability
 - handle code injection
 - add a frontend

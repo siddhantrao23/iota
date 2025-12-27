@@ -78,7 +78,6 @@ func workerLoop(ctx context.Context, cli *client.Client, id int) {
 			return
 		}
 	}
-
 }
 
 func createWorker(cli *client.Client) (*Worker, error) {

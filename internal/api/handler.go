@@ -21,6 +21,21 @@ func SetupRouter() *gin.Engine {
 			return
 		}
 
+		if val, hit := orchestrator.GetCache(req.Code); hit {
+			if val.Error != nil {
+				c.JSON(http.StatusOK, gin.H{
+					"error":  val.Error.Error(),
+					"cached": true,
+				})
+			} else {
+				c.JSON(http.StatusOK, gin.H{
+					"output": val.Output,
+					"cached": true,
+				})
+			}
+			return
+		}
+
 		resultChan := make(chan orchestrator.Result)
 		job := orchestrator.Job{
 			Code:       req.Code,
@@ -36,11 +51,17 @@ func SetupRouter() *gin.Engine {
 
 		select {
 		case res := <-resultChan:
+			orchestrator.PutCache(req.Code, res)
 			if res.Error != nil {
-				print(res.Error.Error())
-				c.JSON(http.StatusOK, gin.H{"error": res.Error.Error()})
+				c.JSON(http.StatusOK, gin.H{
+					"error":  res.Error.Error(),
+					"cached": false,
+				})
 			} else {
-				c.JSON(http.StatusOK, gin.H{"output": res.Output})
+				c.JSON(http.StatusOK, gin.H{
+					"output": res.Output,
+					"cached": false,
+				})
 			}
 		}
 	})
