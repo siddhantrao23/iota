@@ -14,6 +14,8 @@ type ExecutionRequest struct {
 func SetupRouter() *gin.Engine {
 	router := gin.Default()
 
+	router.StaticFile("/", "./static/index.html")
+
 	router.POST("/run", func(c *gin.Context) {
 		var req ExecutionRequest
 		if err := c.ShouldBindJSON(&req); err != nil {

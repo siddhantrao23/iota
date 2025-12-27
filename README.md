@@ -11,7 +11,7 @@ docker build -t iota ./worker
 # run the api server
 ./iota
 
-# send an api request
+# navigate to http://localhost:8080 or send an api request
 curl -X POST http://localhost:8080/run \
     -H "Content-Type: application/json" \
     -d '{"code": "print(2 + 2)"}'
@@ -26,4 +26,3 @@ curl -X POST http://localhost:8080/run \
 ## todos
 - add observability
 - handle code injection
-- add a frontend

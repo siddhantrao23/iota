@@ -42,4 +42,5 @@ func main() {
 	defer shutdownCancel()
 
 	srv.Shutdown(shutdownCtx)
+	time.Sleep(2 * time.Second)
 }
