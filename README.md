@@ -2,6 +2,8 @@
 
 A local lightweight serverless function as a sevice engine.
 
+![Screenshot of website](website.png)
+
 # Running
 
 ```sh
@@ -24,5 +26,4 @@ curl -X POST http://localhost:8080/run \
 - Cached Queries: Optimized retriggers of same code
 
 ## todos
-- add observability
 - handle code injection
