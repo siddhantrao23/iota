@@ -200,8 +200,15 @@
         </header>
 
         <section class="editor-wrapper">
-            <span class="label">Input (Python)</span>
-            <textarea id="code" class="code-editor" spellcheck="false"># Write your python code here
+            <div style="display:flex;align-items:center;gap:12px;">
+                <span class="label">Input</span>
+                <select id="language" style="font-family:var(--font-code);font-size:12px;padding:3px 8px;border:1px solid var(--border-color);border-radius:4px;background:var(--bg-panel);">
+                    <option value="python">Python</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="shell">Shell</option>
+                </select>
+            </div>
+            <textarea id="code" class="code-editor" spellcheck="false"># Write your code here
 print("Hello from iota!")</textarea>
         </section>
 
@@ -232,16 +239,18 @@ print("Hello from iota!")</textarea>
             const lines = item.code.split('\n').filter(line => line.trim() !== '');
             const title = lines.length > 0 ? lines[0].substring(0, 22) : 'Empty Script';
             
+            const lang = item.language || 'py';
             li.innerHTML = `
                 <div style="font-family: var(--font-code); font-size: 12px;">${title}...</div>
                 <div class="history-meta">
-                    <span>${item.duration}ms ${item.cached ? '(Cache)' : ''}</span>
+                    <span><span class="meta-tag">${lang}</span>${item.duration}ms ${item.cached ? '(Cache)' : ''}</span>
                     <span class="status-dot ${item.status ? 'dot-success' : 'dot-error'}"></span>
                 </div>
             `;
             
-            li.onclick = () => { 
+            li.onclick = () => {
                 document.getElementById('code').value = item.code;
+                document.getElementById('language').value = item.language || 'python';
                 if(item.output) {
                     let metaHtml = `<span class="meta-tag">Restored</span>`;
                     terminal.innerHTML = `${metaHtml}\n\n<span class="log-success">${item.output}</span>`;
@@ -269,27 +278,32 @@ print("Hello from iota!")</textarea>
         async function runCode() {
             const btn = document.getElementById('runBtn');
             const code = document.getElementById('code').value;
+            const language = document.getElementById('language').value;
 
             btn.disabled = true;
             btn.innerText = "Running...";
             terminal.innerHTML = '<span style="color: #999;">... Dispatching to worker</span>';
-            
+
             const startTime = Date.now();
 
             try {
+                const body = language === 'shell'
+                    ? { type: 'shell', args: { command: code } }
+                    : { type: 'code', args: { language, code } };
+
                 const response = await fetch('/run', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code: code })
+                    body: JSON.stringify(body)
                 });
 
                 const data = await response.json();
                 const duration = Date.now() - startTime;
-                
+
                 const historyItem = {
-                    code: code,
+                    code, language,
                     status: !data.error,
-                    duration: duration,
+                    duration,
                     cached: data.cached,
                     output: data.output,
                     timestamp: Date.now()

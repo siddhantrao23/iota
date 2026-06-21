@@ -7,16 +7,16 @@ A local lightweight serverless function as a sevice engine.
 # Running
 
 ```sh
-# build docker image from dockerfile
-docker build -t iota ./worker
+# build everything (binary + worker images)
+make all
 
 # run the api server
-./iota
+make run
 
 # navigate to http://localhost:8080 or send an api request
 curl -X POST http://localhost:8080/run \
     -H "Content-Type: application/json" \
-    -d '{"code": "print(2 + 2)"}'
+    -d '{"type":"code","args":{"language":"python","code":"print(2 + 2)"}}'
 ```
 
 ## Features

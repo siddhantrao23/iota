@@ -23,7 +23,7 @@ type WorkerResponse struct {
 	Error  string `json:"error"`
 }
 
-func workerLoop(ctx context.Context, cli *client.Client, id int) {
+func workerLoop(ctx context.Context, cli *client.Client, id int, runtime string) {
 	defer wg.Done()
 
 	var pendingJob *Job
@@ -35,7 +35,7 @@ func workerLoop(ctx context.Context, cli *client.Client, id int) {
 		default:
 		}
 
-		workerInstance, err := createWorker(cli)
+		workerInstance, err := createWorker(cli, runtime)
 		if err != nil {
 			fmt.Printf("failed to create worker %d, retrying in 2s...\n", id)
 			time.Sleep(2 * time.Second)
@@ -48,7 +48,7 @@ func workerLoop(ctx context.Context, cli *client.Client, id int) {
 		for containerHealthy {
 			if pendingJob == nil {
 				select {
-				case j := <-JobQueue:
+				case j := <-JobQueues[runtime]:
 					pendingJob = &j
 				case <-ctx.Done():
 					containerHealthy = false
@@ -59,7 +59,7 @@ func workerLoop(ctx context.Context, cli *client.Client, id int) {
 				break
 			}
 
-			out, err := sendCodeToWorker(workerInstance.Url, pendingJob.Code)
+			out, err := sendToWorker(workerInstance.Url, pendingJob)
 
 			if err != nil && strings.Contains(err.Error(), "worker unreachable") {
 				containerHealthy = false
@@ -80,9 +80,9 @@ func workerLoop(ctx context.Context, cli *client.Client, id int) {
 	}
 }
 
-func createWorker(cli *client.Client) (*Worker, error) {
+func createWorker(cli *client.Client, runtime string) (*Worker, error) {
 	ctx := context.Background()
-	image := "iota"
+	image := "iota-" + runtime
 
 	containerConfig := &container.Config{
 		Image: image,

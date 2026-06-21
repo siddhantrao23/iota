@@ -23,7 +23,11 @@ func main() {
 		fmt.Printf("Failed to create client%v\n", err)
 	}
 
-	orchestrator.StartDispatcher(ctx, cli, 3)
+	orchestrator.StartDispatcher(ctx, cli, map[string]int{
+		"python":     3,
+		"javascript": 2,
+		"shell":      2,
+	})
 
 	r := api.SetupRouter()
 	srv := &http.Server{

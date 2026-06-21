@@ -3,6 +3,7 @@ package orchestrator
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"sync"
 )
 
@@ -11,8 +12,8 @@ var (
 	mu          sync.RWMutex
 )
 
-func GetCache(code string) (Result, bool) {
-	hash := generateHash(code)
+func GetCache(runtime string, args json.RawMessage) (Result, bool) {
+	hash := generateHash(runtime, args)
 
 	mu.Lock()
 	val, ok := resultCache[hash]
@@ -21,17 +22,19 @@ func GetCache(code string) (Result, bool) {
 	return val, ok
 }
 
-func PutCache(code string, res Result) {
-	hash := generateHash(code)
+func PutCache(runtime string, args json.RawMessage, res Result) {
+	hash := generateHash(runtime, args)
 
 	mu.Lock()
 	resultCache[hash] = res
 	mu.Unlock()
 }
 
-func generateHash(key string) string {
-	hash := sha256.New()
-	hash.Write([]byte(key))
+func generateHash(runtime string, args json.RawMessage) string {
+	h := sha256.New()
+	h.Write([]byte(runtime))
+	h.Write([]byte{0})
+	h.Write([]byte(args))
 
-	return hex.EncodeToString(hash.Sum(nil))
+	return hex.EncodeToString(h.Sum(nil))
 }

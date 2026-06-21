@@ -8,8 +8,16 @@ import (
 	"net/http"
 )
 
-func sendCodeToWorker(workerUrl string, code string) (string, error) {
-	payload, _ := json.Marshal(map[string]string{"code": code})
+type WorkerPayload struct {
+	Type string           `json:"type"`
+	Args *json.RawMessage `json:"args"`
+}
+
+func sendToWorker(workerUrl string, job *Job) (string, error) {
+	payload, _ := json.Marshal(WorkerPayload{
+		Type: job.Type,
+		Args: &job.Args,
+	})
 	resp, err := http.Post(workerUrl, "application/json", bytes.NewBuffer(payload))
 	if err != nil {
 		return "", fmt.Errorf("worker unreachable: %w", err)
@@ -27,7 +35,7 @@ func sendCodeToWorker(workerUrl string, code string) (string, error) {
 	}
 
 	if workerResp.Error != "" {
-		return "", fmt.Errorf("python execution error: %s", workerResp.Error)
+		return "", fmt.Errorf("execution error: %s", workerResp.Error)
 	}
 	return workerResp.Output, nil
 }
